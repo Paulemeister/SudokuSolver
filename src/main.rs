@@ -1,5 +1,6 @@
 use std::fs;
-use termion::color;
+use termion::{color,cursor};
+use clap::{ArgGroup,Parser};
 #[derive(Debug)]
 
 #[derive(Copy,Clone)]
@@ -360,16 +361,25 @@ fn try_solve(input_board:&Board,input_poss: &BoardPoss) -> Option<Board>{
     return Some(board)
 }
 
+#[derive(Parser)]
+struct Cli{
+    input_file: std::path::PathBuf,
+
+    output_file: std::path::PathBuf
+}
+
+
 fn main() {
-    let file_path = "/home/paulemeister/Downloads/data/puzzles5_forum_hardest_1905_11+";
-    let contents = fs::read_to_string(file_path)
+    let cli = Cli::parse();
+    let contents = fs::read_to_string(cli.input_file)
         .expect("Should have been able to read the file");
     let mut lines = contents.split('\n').collect::<Vec<&str>>();
-    lines.pop();
+    //lines.pop();
     //println!{"{}",lines[1]};
     //let test = csv::Reader.from_path(file_path);
     let mut good = 0;
     let mut len = lines.len();
+    let len_digits = 4 as usize;
     for (i,line) in lines.iter().enumerate(){
         let board = match make_board(line){
             Ok(b) => b,
@@ -381,7 +391,7 @@ fn main() {
         };
         let solved_board = try_solve(&board, &BoardPoss::new());
         match solved_board{
-            Some(_)=> {println!("{:>5}/{:>5} solved",i,len); good+=1;},
+            Some(_)=> {println!("{:>len_digits$}/{:>len_digits$} solved{}",i,len,cursor::Up(1)); good+=1;},
             _ => println!{"Something went wrong."}
         }
     }
