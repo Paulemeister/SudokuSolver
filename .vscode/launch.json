@@ -19,7 +19,7 @@
                     "kind": "bin"
                 }
             },
-            "args": ["/home/paulemeister/Downloads/data/puzzles5_forum_hardest_1905_11+","${cwd}/test"],
+            "args": ["print","-i","/home/paulemeister/Downloads/data/puzzles4_forum_hardest_1905","-o","${cwd}/test.txt"],
             "env": {"RUST_BACKTRACE":"1"},
             "cwd": "${workspaceFolder}"
         },

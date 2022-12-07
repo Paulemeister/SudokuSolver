@@ -9,3 +9,4 @@ edition = "2021"
 termion = "*"
 csv = "*"
 clap = { version = "*", features = ["derive"] }
+shellexpand = "3.0.0"

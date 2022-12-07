@@ -1,6 +1,8 @@
-use std::fs;
+use std::{fs, path::PathBuf, num::ParseIntError};
 use termion::{color,cursor};
-use clap::{ArgGroup,Parser};
+use clap::{ArgGroup,Parser,Subcommand,Args};
+use shellexpand;
+use std::io::Write;
 #[derive(Debug)]
 
 #[derive(Copy,Clone)]
@@ -153,19 +155,21 @@ fn check_squares(board: &Board,poss: &BoardPoss) -> BoardPoss{
     return new_poss;
 }
 
-fn print_board(board:&Board){
-    for i in 0..9{
-        if i%3==0{println!{""};}
-        for j in 0..9{
-            if j%3==0{print!{" "};}
+fn get_formatted_board(board:&Board) -> String{
+    let mut out = String::new();
+    for i in 0..9{ // cols
+        if i==3 || i==6{out.push_str("\n")}
+        for j in 0..9{ //rows
+            if j==3 || j==6{out.push_str(" ")}
             let val = board.fields[i*9 +j];
             match val{
-                Some(_) => print!{"{}",val.unwrap()},
-                None => print!{"~"},
+                Some(v) => out.push_str(format!{" {} ",v}.as_str()),
+                None => out.push_str(" ~ "),
             }
         }
-        println!{""};
+        out.push_str("\n");
     }
+    out
 }
 
 
@@ -361,48 +365,232 @@ fn try_solve(input_board:&Board,input_poss: &BoardPoss) -> Option<Board>{
     return Some(board)
 }
 
-#[derive(Parser)]
-struct Cli{
-    input_file: std::path::PathBuf,
 
-    output_file: std::path::PathBuf
+fn get_encoded_board(board: &Board) -> String{
+    let mut out = String::new();
+    for field in board.fields{
+        match field{
+            Some(n) => out.push_str(format!("{}",n).as_str()),
+            None => out.push_str(".")
+        }
+    }
+    out.push_str("\n");
+    out
 }
 
+#[derive(Parser)]
+struct Cli{
+    #[command(subcommand)]
+    command: Commands,
 
-fn main() {
-    let cli = Cli::parse();
-    let contents = fs::read_to_string(cli.input_file)
-        .expect("Should have been able to read the file");
-    let mut lines = contents.split('\n').collect::<Vec<&str>>();
-    //lines.pop();
-    //println!{"{}",lines[1]};
-    //let test = csv::Reader.from_path(file_path);
-    let mut good = 0;
-    let mut len = lines.len();
-    let len_digits = 4 as usize;
-    for (i,line) in lines.iter().enumerate(){
-        let board = match make_board(line){
-            Ok(b) => b,
+    
+
+}
+
+#[derive(Subcommand)]
+enum Commands{
+    Solve(Shared),
+    Print(Shared)
+}
+#[derive(Args)]
+#[clap(group(ArgGroup::new("input").required(true)))]
+#[clap(group(ArgGroup::new("output").required(true)))]
+struct Shared {
+    #[arg(group="input",value_parser=check_input_file)]
+    input_file_pos: Option<std::path::PathBuf>,
+    #[arg(short,long, group="input",value_parser=check_input_file)]
+    input_file_opt: Option<std::path::PathBuf>,
+    #[arg(short='r',long,group="input")]
+    input_raw: Option<String>,
+
+    #[arg(group = "output",value_parser=check_output_file)]
+    output_file_pos: Option<std::path::PathBuf>,
+    #[arg(short,long, group = "output",value_parser=check_output_file)]
+    output_file_opt: Option<std::path::PathBuf>,
+    #[arg(short,long,group = "output")]
+    text_out: bool,
+
+    #[arg(short,long)]
+    formated: bool,
+
+    #[arg(short='n',long,default_value_t=1,allow_hyphen_values=true,value_parser=check_amount)]
+    amount: usize,
+}
+
+fn check_amount(s: &str) -> Result<usize, String> {
+    let num1: i32 = match s.parse(){
+        Ok(u)=> u,
+        Err(e) => return Err(e.to_string()),
+        //_ => usize::MAX
+    };
+    if num1 < 0 {
+        return Ok(usize::MAX);
+    }
+    else {
+        return match usize::try_from(num1){
+            Ok(n) => Ok(n),
+            Err(e) => Err(e.to_string())
+        }
+    }
+}
+
+fn check_input_file(s: &str) -> Result<std::path::PathBuf, String> {
+    let path = match shellexpand::full(s){
+        Ok(s) => PathBuf::from(s.to_string()),
+        Err(e) => return Err(e.to_string()),
+    };
+    if path.is_file() {
+        Ok(path)
+    } else {
+        Err(String::from("not a file"))
+    }
+}
+
+fn check_output_file(s: &str) -> Result<std::path::PathBuf, String> {
+    let path = match shellexpand::full(s){
+        Ok(s) => PathBuf::from(s.to_string()),
+        Err(e) => return Err(e.to_string()),
+    };
+    
+    let filename = match path.is_dir(){
+        true => path.join("solutions.txt"),
+        false => path,
+    };
+    match std::fs::OpenOptions::new().write(true).create(true).open(&filename){
+        Ok(_) => Ok(filename),
+        Err(e) => Err(e.to_string())
+    }
+        
+    
+}
+
+fn print_command(lines: &Vec<&str>,cli: &Shared){
+    let mut boards: Vec<Board> = Vec::new();
+    let mut loaded = 0;
+    for (j,line) in lines.iter().enumerate(){
+        if cli.amount<=loaded{break}
+        match make_board(line){
+            Ok(b) => boards.push(b),
             Err(e) => {
-                eprintln!{"{:?}",e};
-                len -= 1;
+                eprintln!{"Line {}: {:?}",j,e};
                 continue
             },
         };
-        let solved_board = try_solve(&board, &BoardPoss::new());
-        match solved_board{
-            Some(_)=> {println!("{:>len_digits$}/{:>len_digits$} solved{}",i,len,cursor::Up(1)); good+=1;},
-            _ => println!{"Something went wrong."}
+        loaded+=1;
+    }
+    let mut output = String::new();
+    for (i,board) in boards.iter().enumerate(){
+        if cli.amount<=i{break}
+        if cli.formated {
+            output.push_str(get_formatted_board(board).as_str());
+            output.push_str("----------------------------\n");
+        }
+        else {
+            output.push_str(get_encoded_board(board).as_str());
         }
     }
-    println!("passed {}/{}",good,len);
+    let default = PathBuf::from("./solutions.txt");
+    let output_file = match (&cli.output_file_pos,&cli.output_file_opt){
+        (Some(f),_) => f,
+        (_,Some(f))=> f,
+        (None,None) => &default,
+    };
+    if cli.text_out{
+        print!("{}",output);
+    }
+    else {
+        let file =  match std::fs::OpenOptions::new()
+            .write(true)
+            .create(true)
+            .truncate(true)
+            .open(output_file) {
+            Err(e) => {eprintln!("{}",e.to_string()); return},
+            Ok(f) => f,
+        };
+        match write!(&file,"{}",output){
+            Ok(_) =>(),
+            Err(e) => {eprintln!("{}",e.to_string()); return}
+        }
+    }
+}
 
-    // let board = make_board(lines[1527]).ok().expect("couldn't make board");
-    // let solved_board = try_solve(&board, &BoardPoss::new());
-    // match solved_board{
-    //     Some(_)=> print_board(&solved_board.unwrap()),
-    //     _ => println!{"Something went wrong."}
-    // }
+fn solve_command(lines: &Vec<&str>,cli: &Shared){
+    let mut len = lines.len();
+    let len_digits = 4 as usize;
+    let mut output = String::new();
+    let mut i = 0;
+    for (j,line) in lines.iter().enumerate(){
+        if cli.amount<=i{break}
+        let board = match make_board(line){
+            Ok(b) => {b},
+            Err(e) => {
+                eprintln!{"Line {}: {:?}",j,e};
+                len-= 1;
+                continue
+            },
+        };
+        
+        let solved_board = match try_solve(&board, &BoardPoss::new()){
+            Some(b) => b,
+            None => {println!("Something went wrong solving the Board.");continue}
+        };
+
+        print!("{:>len_digits$}/{:>len_digits$} solved\n{}",i,len,cursor::Up(1));
+        i+=1;
+    
+        if cli.formated {
+            output.push_str(get_formatted_board(&solved_board).as_str());
+            output.push_str("----------------------------\n");
+        }
+        else {
+            output.push_str(get_encoded_board(&solved_board).as_str());
+        }
+    }
+    let default = PathBuf::from("./solutions.txt");
+    let output_file = match (&cli.output_file_pos,&cli.output_file_opt){
+        (Some(f),_) => f,
+        (_,Some(f))=> f,
+        (None,None) => &default,
+    };
+    if cli.text_out{
+        print!("{}",output);
+    }
+    else {
+        let file =  match std::fs::OpenOptions::new()
+            .write(true)
+            .create(true)
+            .truncate(true)
+            .open(&output_file) {
+            Err(e) => {eprintln!("{}",e.to_string()); return},
+            Ok(f) => f,
+        };
+        match write!(&file,"{}",output){
+            Ok(_) =>(),
+            Err(e) => {eprintln!("{}",e.to_string()); return}
+        }
+    }
+}
+
+fn main() {
+    let cli = Cli::parse();
+    let command_args = match &cli.command {
+        Commands::Solve(a) => a,
+        Commands::Print(a) => a
+    };
+    let contents = match (&command_args.input_raw,&command_args.input_file_pos,&command_args.input_file_opt){
+        (None,Some(p),None) =>  fs::read_to_string(p)
+        .expect("Should have been able to read the file"),
+        (None,None,Some(t)) => fs::read_to_string(t)
+        .expect("Should have been able to read the file"),
+        (Some(s),None,None) => s.to_string(),
+        _ => "s".to_string()
+    };
+    let lines = contents.split('\n').collect::<Vec<&str>>();
+    
+    match cli.command {
+        Commands::Solve(a) => solve_command(&lines, &a),
+        Commands::Print(a) => print_command(&lines, &a)
+    }
 }
 
 #[cfg(test)]
