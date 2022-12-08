@@ -28,7 +28,7 @@ two subcommands are available :
 - `solve` will parse, solve and then output
 
 ```shell
-~/Code/Rust/SudokuSolver cargo run --release -- solve -r ........8..3...4...9..2..6.....79.......612...6.5.2.7...8...5...1.....2.4.5.....3 -tf
+cargo run --release -- solve -r ........8..3...4...9..2..6.....79.......612...6.5.2.7...8...5...1.....2.4.5.....3 -tf
 
  2  4  6   7  9  5   1  3  8 
  5  7  3   1  8  6   4  9  2 
