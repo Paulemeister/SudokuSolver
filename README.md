@@ -17,9 +17,9 @@ A new Board is constructed and attemped to solve. If the solve fails, the guesse
 CLI
 
 A List of sudokus in the form of 81 characters [1-9] for known fields and [.] for unknown ones, 
-separated by newlines can be provided in a path to a file or directly as a argument with the flag `-t`
+separated by newlines can be provided in a path to a file or directly as a argument with the flag `-r`
 
-The output can either be in the same format, or formated user readable with `-f`, either printed to STDOUT with `-` or to a file specified.
+The output can either be in the same format, or formated user readable with `-f`, either printed to STDOUT with `-t` or to a file specified.
 
 The number of lines that should be solved can be specified by `-n` the default is 1
 
