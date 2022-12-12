@@ -1,4 +1,4 @@
-use std::{fs, path::PathBuf, num::ParseIntError};
+use std::{fs, path::PathBuf};
 use termion::{color,cursor};
 use clap::{ArgGroup,Parser,Subcommand,Args};
 use shellexpand;
@@ -79,7 +79,7 @@ enum BoardReadError{
 }
 
 
-fn make_board(input: &str)-> Result<Board,BoardReadError>{
+fn make_board(input: &str,del: &char)-> Result<Board,BoardReadError>{
     let mut board = Board::new();
     
     if input.len() != 81{
@@ -88,7 +88,7 @@ fn make_board(input: &str)-> Result<Board,BoardReadError>{
     for (i,c) in input.chars().enumerate() {
         match c {
             '1'..='9' => board.fields[i] = Some(c.to_digit(10).unwrap()),
-            '.' => board.fields[i] = None,
+            c if c==*del => board.fields[i] = None,
             _ => return Err(BoardReadError::UnexpectedCharacter),
         }
     }
@@ -155,7 +155,7 @@ fn check_squares(board: &Board,poss: &BoardPoss) -> BoardPoss{
     return new_poss;
 }
 
-fn get_formatted_board(board:&Board) -> String{
+fn get_formatted_board(board:&Board,del: &char) -> String{
     let mut out = String::new();
     for i in 0..9{ // cols
         if i==3 || i==6{out.push_str("\n")}
@@ -164,7 +164,7 @@ fn get_formatted_board(board:&Board) -> String{
             let val = board.fields[i*9 +j];
             match val{
                 Some(v) => out.push_str(format!{" {} ",v}.as_str()),
-                None => out.push_str(" ~ "),
+                None => out.push_str(&format!(" {} ",del)),
             }
         }
         out.push_str("\n");
@@ -366,12 +366,12 @@ fn try_solve(input_board:&Board,input_poss: &BoardPoss) -> Option<Board>{
 }
 
 
-fn get_encoded_board(board: &Board) -> String{
+fn get_encoded_board(board: &Board,del: &char) -> String{
     let mut out = String::new();
     for field in board.fields{
         match field{
             Some(n) => out.push_str(format!("{}",n).as_str()),
-            None => out.push_str(".")
+            None => out.push_str(&del.to_string())
         }
     }
     out.push_str("\n");
@@ -415,6 +415,12 @@ struct Shared {
 
     #[arg(short='n',long,default_value_t=1,allow_hyphen_values=true,value_parser=check_amount)]
     amount: usize,
+
+    #[arg(short,long,default_value_t='.')]
+    delimeter: char,
+
+    #[arg(short='l',long,default_value_t='.')]
+    delimeter_in: char,
 }
 
 fn check_amount(s: &str) -> Result<usize, String> {
@@ -469,7 +475,7 @@ fn print_command(lines: &Vec<&str>,cli: &Shared){
     let mut loaded = 0;
     for (j,line) in lines.iter().enumerate(){
         if cli.amount<=loaded{break}
-        match make_board(line){
+        match make_board(line,&cli.delimeter_in){
             Ok(b) => boards.push(b),
             Err(e) => {
                 eprintln!{"Line {}: {:?}",j,e};
@@ -482,11 +488,11 @@ fn print_command(lines: &Vec<&str>,cli: &Shared){
     for (i,board) in boards.iter().enumerate(){
         if cli.amount<=i{break}
         if cli.formated {
-            output.push_str(get_formatted_board(board).as_str());
+            output.push_str(get_formatted_board(board,&cli.delimeter).as_str());
             output.push_str("----------------------------\n");
         }
         else {
-            output.push_str(get_encoded_board(board).as_str());
+            output.push_str(get_encoded_board(board,&cli.delimeter).as_str());
         }
     }
     let default = PathBuf::from("./solutions.txt");
@@ -521,7 +527,7 @@ fn solve_command(lines: &Vec<&str>,cli: &Shared){
     let mut i = 0;
     for (j,line) in lines.iter().enumerate(){
         if cli.amount<=i{break}
-        let board = match make_board(line){
+        let board = match make_board(line,&cli.delimeter_in){
             Ok(b) => {b},
             Err(e) => {
                 eprintln!{"Line {}: {:?}",j,e};
@@ -539,11 +545,11 @@ fn solve_command(lines: &Vec<&str>,cli: &Shared){
         i+=1;
     
         if cli.formated {
-            output.push_str(get_formatted_board(&solved_board).as_str());
+            output.push_str(get_formatted_board(&solved_board,&cli.delimeter).as_str());
             output.push_str("----------------------------\n");
         }
         else {
-            output.push_str(get_encoded_board(&solved_board).as_str());
+            output.push_str(get_encoded_board(&solved_board,&cli.delimeter).as_str());
         }
     }
     let default = PathBuf::from("./solutions.txt");
@@ -585,7 +591,7 @@ fn main() {
         (Some(s),None,None) => s.to_string(),
         _ => "s".to_string()
     };
-    let lines = contents.split('\n').collect::<Vec<&str>>();
+    let lines = contents.split('\n').map(|x| x.trim()).collect::<Vec<&str>>();
     
     match cli.command {
         Commands::Solve(a) => solve_command(&lines, &a),
