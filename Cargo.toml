@@ -9,7 +9,11 @@ edition = "2021"
 debug = true
 
 [dependencies]
-termion = "*"
 csv = "*"
 clap = { version = "*", features = ["derive"] }
 shellexpand = "3.0.0"
+
+[target.'cfg(windows)'.dependencies]
+termion = {git="https://github.com/MOZGIII/termion-with-windows-support/",branch="windows-support"}
+
+[target.'cfg(not(windows))'.dependencies]
