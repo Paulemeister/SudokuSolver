@@ -16,17 +16,20 @@ A new Board is constructed and attemped to solve. If the solve fails, the guesse
 
 CLI
 
-A List of sudokus in the form of 81 characters [1-9] for known fields and [.] for unknown ones, 
+A List of sudokus in the form of 81 characters [1-9] for known fields and [.] for unknown ones (character configurable), 
 separated by newlines can be provided in a path to a file or directly as a argument with the flag `-r`
 
 The output can either be in the same format, or formated user readable with `-f`, either printed to STDOUT with `-t` or to a file specified.
 
 The number of lines that should be solved can be specified by `-n` the default is 1
 
+The input and output character for the unknown fields is configurable by the `-d` (output) and the `-l` (input) flag.
+
 two subcommands are available :
 - `print` will parse the inputs and only output the given boards
 - `solve` will parse, solve and then output
 
+Example:
 ```shell
 cargo run --release -- solve -r ........8..3...4...9..2..6.....79.......612...6.5.2.7...8...5...1.....2.4.5.....3 -tf
 
@@ -42,7 +45,4 @@ cargo run --release -- solve -r ........8..3...4...9..2..6.....79.......612...6.
  7  1  9   3  5  8   6  2  4 
  4  2  5   6  1  7   9  8  3 
 ----------------------------
-
-
-
 ```
