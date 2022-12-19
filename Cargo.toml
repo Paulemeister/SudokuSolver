@@ -8,12 +8,13 @@ edition = "2021"
 [profile.release]
 debug = true
 
+[target.'cfg(windows)'.dependencies]
+termion_win = {git="https://github.com/MOZGIII/termion-with-windows-support/",branch="windows-support",package="termion"}
+
+[target.'cfg(not(windows))'.dependencies]
+termion = "*"
+
 [dependencies]
 csv = "*"
 clap = { version = "*", features = ["derive"] }
 shellexpand = "3.0.0"
-
-[target.'cfg(windows)'.dependencies]
-termion = {git="https://github.com/MOZGIII/termion-with-windows-support/",branch="windows-support"}
-
-[target.'cfg(not(windows))'.dependencies]

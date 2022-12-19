@@ -1,4 +1,7 @@
+#[cfg(not(windows))]
 use termion::{cursor};
+#[cfg(windows)]
+use termion_win::{cursor};
 use std::io::Write;
 use std::path::PathBuf;
 use clap::Parser;

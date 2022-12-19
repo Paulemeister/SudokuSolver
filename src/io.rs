@@ -1,5 +1,7 @@
+#[cfg(not(windows))]
 use termion::{color};
-
+#[cfg(windows)]
+use termion_win::{color};
 use crate::board::*;
 
 #[derive(Debug)]
