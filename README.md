@@ -25,6 +25,8 @@ The number of lines that should be solved can be specified by `-n` the default i
 
 The input and output character for the unknown fields is configurable by the `-d` (output) and the `-l` (input) flag.
 
+the line ends for input and output are configurable with `--line-end-in` and `--line-end-out`.
+
 two subcommands are available :
 - `print` will parse the inputs and only output the given boards
 - `solve` will parse, solve and then output
