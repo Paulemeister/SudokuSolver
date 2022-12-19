@@ -16,7 +16,7 @@ fn print_command(lines: &Vec<&str>,cli: &Shared){
     let mut loaded = 0;
     for (j,line) in lines.iter().enumerate(){
         if cli.amount<=loaded{break}
-        match make_board(line,&cli.delimeter_in){
+        match make_board(line,&cli.delimeter_in,&cli.line_end_in){
             Ok(b) => boards.push(b),
             Err(e) => {
                 eprintln!{"Line {}: {:?}",j,e};
@@ -33,7 +33,7 @@ fn print_command(lines: &Vec<&str>,cli: &Shared){
             output.push_str("----------------------------\n");
         }
         else {
-            output.push_str(get_encoded_board(board,&cli.delimeter).as_str());
+            output.push_str(get_encoded_board(board,&cli.delimeter,&cli.line_end_out).as_str());
         }
     }
     let default = PathBuf::from("./solutions.txt");
@@ -68,7 +68,7 @@ fn solve_command(lines: &Vec<&str>,cli: &Shared){
     let mut i = 0;
     for (j,line) in lines.iter().enumerate(){
         if cli.amount<=i{break}
-        let board = match make_board(line,&cli.delimeter_in){
+        let board = match make_board(line,&cli.delimeter_in,&cli.line_end_in){
             Ok(b) => {b},
             Err(e) => {
                 eprintln!{"Line {}: {:?}",j,e};
@@ -90,7 +90,7 @@ fn solve_command(lines: &Vec<&str>,cli: &Shared){
             output.push_str("----------------------------\n");
         }
         else {
-            output.push_str(get_encoded_board(&solved_board,&cli.delimeter).as_str());
+            output.push_str(get_encoded_board(&solved_board,&cli.delimeter,&cli.line_end_out).as_str());
         }
     }
     let default = PathBuf::from("./solutions.txt");
