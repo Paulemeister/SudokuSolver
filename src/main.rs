@@ -172,7 +172,7 @@ fn get_formatted_board(board:&Board,del: &char) -> String{
     out
 }
 
-
+#[allow(dead_code)]
 fn print_checked(poss: &BoardPoss){
     for i in 0..9{
         if i%3==0{println!{""};} //Delim Rows Squares
@@ -301,32 +301,9 @@ fn try_solve(input_board:&Board,input_poss: &BoardPoss) -> Option<Board>{
     let mut poss = *input_poss;
     let mut exchanged;
     while has_none(&board){
-        //print_board(&board);
         poss = check_rows(&board,&poss);
-        //print_checked(&poss);
         poss = check_columns(&board,&poss);
-        //print_checked(&poss);
         poss = check_squares(&board,&poss);
-        //print_checked(&poss);
-        // for i in 0..81 {
-        //     match board.fields[i]{
-        //         Some(_) => continue,
-        //         None => (),
-        //     }
-        //     let poss_field = poss.fields[i];
-        //     let mut amount = 0;
-        //     for j in 0..9{
-        //         match poss_field.fields[j]{
-        //             Some(_) => amount +=1,
-        //             _ => (),
-        //         }
-        //     }
-        //     if amount==9{
-        //         print_board(&board);
-        //         print_checked(&poss);
-        //         print!("");
-        //     }
-        // }
         match replace_known(&mut board, &poss){
             Some(a) => exchanged = a,
             None => return None,
@@ -334,11 +311,6 @@ fn try_solve(input_board:&Board,input_poss: &BoardPoss) -> Option<Board>{
         if !exchanged {
             let guess_index = calc_guess(&board,&poss);
             let mut guess: u32 = 0;
-            // if guess_index ==44{
-            //     print_board(&board);
-            //     print_checked(&poss);
-            //     print!("");
-            // }
             for i in 0..9{
                 let field_poss = poss.fields[guess_index].fields[i];
                 match field_poss{
@@ -349,16 +321,12 @@ fn try_solve(input_board:&Board,input_poss: &BoardPoss) -> Option<Board>{
                     _ => (),
                 }
             }
-            //println!("{}",guess_index);
-            //println!{"Guessing {} is {}",guess_index,guess};
-            //print_checked(&poss);
             let mut new_board = board;
             new_board.fields[guess_index] = Some(guess);
             match try_solve(&new_board, &poss.clone()){
                 Some(_board) => return Some(_board),
                 None => poss.fields[guess_index].set(guess as usize,false),
             }
-            //println!{"Guessed Wrong! {} is NOT {}",guess_index,guess};
         }
     }
     
@@ -382,9 +350,6 @@ fn get_encoded_board(board: &Board,del: &char) -> String{
 struct Cli{
     #[command(subcommand)]
     command: Commands,
-
-    
-
 }
 
 #[derive(Subcommand)]
