@@ -22,12 +22,24 @@ impl Board {
         }
     }
 }
+
+impl Default for Board {
+    fn default() -> Self {
+        Self::new()
+    }
+}
  
 impl BoardPoss {
     pub fn new() -> BoardPoss{
         BoardPoss{
             fields:[PossField::new() ;81]
         }
+    }
+}
+
+impl Default for BoardPoss {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -63,5 +75,11 @@ impl PossField {
                 _ => self.amount += 1,
             }
         }
+    }
+}
+
+impl Default for PossField {
+    fn default() -> Self {
+        Self::new()
     }
 }

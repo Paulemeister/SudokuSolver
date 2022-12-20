@@ -24,22 +24,22 @@ pub fn make_board(input: &str,del: &char,end: &str)-> Result<Board,BoardReadErro
             _ => return Err(BoardReadError::UnexpectedCharacter),
         }
     }
-    return Ok(board);
+    Ok(board)
 }
 
 pub fn get_formatted_board(board:&Board,del: &char) -> String{
     let mut out = String::new();
     for i in 0..9{ // cols
-        if i==3 || i==6{out.push_str("\n")}
+        if i==3 || i==6{out.push('\n')}
         for j in 0..9{ //rows
-            if j==3 || j==6{out.push_str(" ")}
+            if j==3 || j==6{out.push(' ')}
             let val = board.fields[i*9 +j];
             match val{
                 Some(v) => out.push_str(format!{" {} ",v}.as_str()),
                 None => out.push_str(&format!(" {} ",del)),
             }
         }
-        out.push_str("\n");
+        out.push('\n');
     }
     out
 }
@@ -47,7 +47,7 @@ pub fn get_formatted_board(board:&Board,del: &char) -> String{
 #[allow(dead_code)]
 pub fn print_checked(poss: &BoardPoss){
     for i in 0..9{
-        if i%3==0{println!{""};} //Delim Rows Squares
+        if i%3==0{println!();} //Delim Rows Squares
         for j in 0..3{
             for k in 0..9{
                 if k%3==0{print!{"  "};}//Delim Cols Squares
@@ -61,7 +61,7 @@ pub fn print_checked(poss: &BoardPoss){
                 }
                 print!{"{} ",color::Bg(color::Reset)} //Delim Cols Neigbour
             }
-            println!{""} //Delim Rows Neigbour
+            println!() //Delim Rows Neigbour
         }
         //println!{""}
     }
