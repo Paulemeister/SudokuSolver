@@ -2,7 +2,7 @@ name: Rust
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "master", "testing" ]
   pull_request:
     branches: [ "master" ]
   workflow_dispatch:
@@ -25,6 +25,17 @@ jobs:
   build-windows:
 
     runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Build
+      run: cargo build --verbose
+    - name: Run tests
+      run: cargo test --verbose
+      
+  build-macos:
+
+    runs-on: macos-latest
 
     steps:
     - uses: actions/checkout@v3
