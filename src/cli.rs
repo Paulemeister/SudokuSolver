@@ -58,10 +58,10 @@ fn check_amount(s: &str) -> Result<usize, String> {
         //_ => usize::MAX
     };
     if num1 < 0 {
-        return Ok(usize::MAX);
+        Ok(usize::MAX)
     }
     else {
-        return match usize::try_from(num1){
+        match usize::try_from(num1){
             Ok(n) => Ok(n),
             Err(e) => Err(e.to_string())
         }

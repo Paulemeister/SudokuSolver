@@ -14,7 +14,7 @@ pub mod io;
 
 use crate::{board::*,cli::*,solver::*,io::*};
 
-fn print_command(lines: &Vec<&str>,cli: &Shared){
+fn print_command(lines: &[&str],cli: &Shared){
     let mut boards: Vec<Board> = Vec::new();
     let mut loaded = 0;
     for (j,line) in lines.iter().enumerate(){
@@ -54,19 +54,19 @@ fn print_command(lines: &Vec<&str>,cli: &Shared){
             .create(true)
             .truncate(true)
             .open(output_file) {
-            Err(e) => {eprintln!("{}",e.to_string()); return},
+            Err(e) => {eprintln!("{}",e); return},
             Ok(f) => f,
         };
         match write!(&file,"{}",output){
             Ok(_) =>(),
-            Err(e) => {eprintln!("{}",e.to_string()); return}
+            Err(e) => {eprintln!("{}",e)}
         }
     }
 }
 
 fn solve_command(lines: &Vec<&str>,cli: &Shared){
     let mut len = lines.len();
-    let len_digits = 4 as usize;
+    let len_digits = 4;
     let mut output = String::new();
     let mut i = 0;
     for (j,line) in lines.iter().enumerate(){
@@ -110,13 +110,13 @@ fn solve_command(lines: &Vec<&str>,cli: &Shared){
             .write(true)
             .create(true)
             .truncate(true)
-            .open(&output_file) {
-            Err(e) => {eprintln!("{}",e.to_string()); return},
+            .open(output_file) {
+            Err(e) => {eprintln!("{}",e); return},
             Ok(f) => f,
         };
         match write!(&file,"{}",output){
             Ok(_) =>(),
-            Err(e) => {eprintln!("{}",e.to_string()); return}
+            Err(e) => {eprintln!("{}",e)}
         }
     }
 }
