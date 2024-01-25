@@ -1,4 +1,4 @@
-use crate::{board::*, print_checked, print_formatted_board};
+use crate::board::*;
 
 fn check_rows(board: &Board, poss: &BoardPoss) -> Option<BoardPoss> {
     let mut new_poss = *poss;
@@ -90,9 +90,6 @@ fn check_squares(board: &Board, poss: &BoardPoss) -> Option<BoardPoss> {
 }
 
 fn replace_known(board: &mut Board, poss: &BoardPoss) -> Option<bool> {
-    // BUG: can replace two fields with the same number in the same pass, even if an invalid board is created
-    // probably because the amount == 9 check is skipped when a number is written to the field
-
     let mut replaced = false;
     for (i, f) in poss.fields.iter().enumerate() {
         if board.fields[i].is_some() {
@@ -189,14 +186,11 @@ pub fn try_solve(input_board: &Board, input_poss: &BoardPoss) -> Option<Board> {
     let mut board = *input_board;
     let mut poss = *input_poss;
     let mut exchanged;
-    print_formatted_board(&board);
     while has_none(&board) {
         poss = check_rows(&board, &poss)?;
         poss = check_columns(&board, &poss)?;
         poss = check_squares(&board, &poss)?;
-        print_checked(&poss);
         exchanged = replace_known(&mut board, &poss)?;
-        print_formatted_board(&board);
         if !exchanged {
             // no trivial step left
             let guess_index = calc_guess(&board, &poss);

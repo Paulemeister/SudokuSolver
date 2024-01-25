@@ -76,6 +76,7 @@ pub fn print_checked(poss: &BoardPoss) {
     }
 }
 
+#[allow(dead_code)]
 pub fn print_formatted_board(board: &Board) {
     println!("{}", get_formatted_board(board, &'.'))
 }
