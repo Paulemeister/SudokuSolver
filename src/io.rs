@@ -76,6 +76,10 @@ pub fn print_checked(poss: &BoardPoss) {
     }
 }
 
+pub fn print_formatted_board(board: &Board) {
+    println!("{}", get_formatted_board(board, &'.'))
+}
+
 pub fn get_encoded_board(board: &Board, del: &char, end: &str) -> String {
     let mut out = String::new();
     for field in board.fields {

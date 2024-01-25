@@ -1,29 +1,37 @@
-use crate::board::*;
+use crate::{board::*, print_checked, print_formatted_board};
 
-fn check_rows(board: &Board, poss: &BoardPoss) -> BoardPoss {
+fn check_rows(board: &Board, poss: &BoardPoss) -> Option<BoardPoss> {
     let mut new_poss = *poss;
     for i in 0..9 {
-        // rows
+        // invalid board detector array
+        let mut num_count: [usize; 9] = [0; 9];
+        // rows;
         let mut not_possible = PossField::new();
         // write existing numbers in row in PossField
         for j in 0..9 {
             // collumns
             let num = board.fields[i * 9 + j];
             if let Some(a) = num {
-                not_possible.set(a as usize, false)
+                not_possible.set(a as usize, false);
+                num_count[(a - 1) as usize] += 1;
             }
         }
         // combine the impossible fields
         for j in 0..9 {
             new_poss.fields[i * 9 + j].combine(not_possible);
         }
+        if num_count.iter().max()? > &1 {
+            return None;
+        }
     }
-    new_poss
+    Some(new_poss)
 }
 
-fn check_columns(board: &Board, poss: &BoardPoss) -> BoardPoss {
+fn check_columns(board: &Board, poss: &BoardPoss) -> Option<BoardPoss> {
     let mut new_poss = *poss;
     for i in 0..9 {
+        // invalid board detector array
+        let mut num_count: [usize; 9] = [0; 9];
         // collumns
         let mut not_possible = PossField::new();
         // write existing numbers in collumn in PossField
@@ -31,22 +39,28 @@ fn check_columns(board: &Board, poss: &BoardPoss) -> BoardPoss {
             // rows
             let num = board.fields[i + j * 9];
             if let Some(a) = num {
-                not_possible.set(a as usize, false)
+                not_possible.set(a as usize, false);
+                num_count[(a - 1) as usize] += 1;
             }
         }
         // combine the impossible fields
         for j in 0..9 {
             new_poss.fields[i + j * 9].combine(not_possible);
         }
+        if num_count.iter().max()? > &1 {
+            return None;
+        }
     }
-    new_poss
+    Some(new_poss)
 }
 
-fn check_squares(board: &Board, poss: &BoardPoss) -> BoardPoss {
+fn check_squares(board: &Board, poss: &BoardPoss) -> Option<BoardPoss> {
     let mut new_poss = *poss;
     for i in 0..3 {
         // squares row
         for j in 0..3 {
+            // invalid board detector array
+            let mut num_count: [usize; 9] = [0; 9];
             // squares collumn
             let mut square = PossField::new();
             // write existing numbers in square in PossField
@@ -56,7 +70,8 @@ fn check_squares(board: &Board, poss: &BoardPoss) -> BoardPoss {
                     // current square collumn
                     let num = board.fields[3 * j + k + 9 * (3 * i + l)];
                     if let Some(a) = num {
-                        square.set(a as usize, false)
+                        square.set(a as usize, false);
+                        num_count[(a - 1) as usize] += 1;
                     }
                 }
             }
@@ -66,12 +81,18 @@ fn check_squares(board: &Board, poss: &BoardPoss) -> BoardPoss {
                     new_poss.fields[3 * j + k + 9 * (3 * i + l)].combine(square);
                 }
             }
+            if num_count.iter().max()? > &1 {
+                return None;
+            }
         }
     }
-    new_poss
+    Some(new_poss)
 }
 
 fn replace_known(board: &mut Board, poss: &BoardPoss) -> Option<bool> {
+    // BUG: can replace two fields with the same number in the same pass, even if an invalid board is created
+    // probably because the amount == 9 check is skipped when a number is written to the field
+
     let mut replaced = false;
     for (i, f) in poss.fields.iter().enumerate() {
         if board.fields[i].is_some() {
@@ -168,14 +189,14 @@ pub fn try_solve(input_board: &Board, input_poss: &BoardPoss) -> Option<Board> {
     let mut board = *input_board;
     let mut poss = *input_poss;
     let mut exchanged;
+    print_formatted_board(&board);
     while has_none(&board) {
-        poss = check_rows(&board, &poss);
-        poss = check_columns(&board, &poss);
-        poss = check_squares(&board, &poss);
-        match replace_known(&mut board, &poss) {
-            Some(a) => exchanged = a,
-            None => return None, // impossible board detected
-        }
+        poss = check_rows(&board, &poss)?;
+        poss = check_columns(&board, &poss)?;
+        poss = check_squares(&board, &poss)?;
+        print_checked(&poss);
+        exchanged = replace_known(&mut board, &poss)?;
+        print_formatted_board(&board);
         if !exchanged {
             // no trivial step left
             let guess_index = calc_guess(&board, &poss);
